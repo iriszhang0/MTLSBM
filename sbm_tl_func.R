@@ -232,7 +232,6 @@ run_simulation <- function(N, K, L, Kl_target, Kl_source, rho_l_target, rho_l_so
   global_clustering <- spectral_clustering(S0, K, true_global_labels)
   pred_global_labels <- global_clustering$predicted_labels
   global_ari <- global_clustering$ari
-  K_estimate <- max(1, min(K_estimate, K))
   Kl_target_estimated <- target_community_num_estimate(A_list, pred_global_labels, K_estimated, permu_prop)
   target_ari <- local_cluster(A_list, pred_global_labels, true_target_labels, K, Kl_target)$ari
   list(K = K, L = L, Kl_target = Kl_target, rho_l_target = rho_l_target, permu_prop = permu_prop, 

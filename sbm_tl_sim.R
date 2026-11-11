@@ -22,7 +22,6 @@ results_layers <- vector("list", length(L_arr))
 for (i in seq_along(L_arr)) {
   L <- L_arr[i]
   rho_l_source <- rep(0.01,L)
-  # Kl_source <- rep(2,L); rho_l_source <- rep(0.01,L)
   Kl_source <- sample(2:Kl_target, L, replace = T) 
   results_layers[[i]] <- run_simulation(N, K, L, Kl_target, Kl_source, rho_l_target, rho_l_source)
   results_layers[[i]]$rep <- task_id
@@ -48,7 +47,25 @@ results_communities <- data.table::rbindlist(results_communities)
 output_dir <- "/scratch/jz6169/MTLSBM/TransferLearning/Simulation/"
 
 saveRDS(list(sparsity = results_sparsity, layers = results_layers, communities = results_communities),
-        file = file.path(output_dir, paste0("result3_rep_", task_id, ".rds")))
+        file = file.path(output_dir, paste0("result_rep_", task_id, ".rds")))
+
+
+###Vary permutation proportion
+K <- 8; L <- 200; Kl_target <- 4; Kl_source <- sample(2:Kl_target, L, replace = T); rho_l_source <- rep(0.01,L); rho_l_target <- 0.05
+permutation_prop <- c(0, 0.02, 0.04, 0.06, 0.08, 0.1, 0.12, 0.14, 0.16, 0.18, 0.2)
+
+results_permute <- vector("list", length(permutation_prop))
+for (i in seq_along(permutation_prop)) {
+  permu_prop <- permutation_prop[i]
+  results_permute[[i]] <- run_simulation(N, K, L, Kl_target, Kl_source, rho_l_target, rho_l_source, permu_prop)
+  results_permute[[i]]$rep <- task_id
+}
+results_permute <- data.table::rbindlist(results_permute)
+saveRDS(list(permutation = results_permute),
+        file = file.path(output_dir, paste0("result_permu_rep_", task_id, ".rds")))
+
+
+
 
 
 
