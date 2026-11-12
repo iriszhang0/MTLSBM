@@ -157,49 +157,6 @@ local_cluster <- function(A_list, pred_global_labels, true_target_labels, K, Kl_
 }
 
 
-shared_community_num_estimate <- function(A_list, S0, N, L, prop = 0){
-  K_estimate <- NA
-  sum_A_mat <- sum(sapply(A_list,sum)) 
-  rho_hat <- sum_A_mat/((L)*N*N)
-  if(prop == 0){
-      t_n <- (L)*N*rho_hat^2+sqrt(L)*N*rho_hat*(log(L+N))^(0.5)
-  }else{
-      t_n <- L*N*rho_hat^2*sqrt(log(N))+sqrt(L)*N*rho_hat*log(L+N)+L*N^2*rho_hat^2*(prop)^(5/6)
-  }
-  eigen_decomp <- eigen(S0)
-  eigen_values <- eigen_decomp$values
-  eigen_values_top <- sort(eigen_values, decreasing = TRUE)
-  K_estimate <- which.max(eigen_values_top>t_n & c(eigen_values_top[-1],-Inf)<t_n)
-  return(K_estimate)
-}
-
-
-target_community_num_estimate <- function(A_list, predicted_labels, K_est, prop = 0){
-  Kt_estimate <- NA
-  A_t <- A_list[[1]]
-  theta_hat <- predicted_labels
-  one_hot <- matrix(0, nrow = length(theta_hat), ncol = K_est)
-  one_hot[cbind(seq_along(theta_hat), theta_hat)] <- 1
-  theta_hat <- one_hot
-  D <- diag(rep(0,K_est))
-  for (i in 1:K_est){
-      D[i,i] <- 1/sum(predicted_labels==i)
-  }
-  layer_dat <- D %*% t(theta_hat) %*% A_t %*% theta_hat %*% D
-  rho_hat_t <- sum(A_t) / (N*N)
-  if(prop == 0){
-    t_t_n <- K_est^(2.1)*sqrt(rho_hat_t*log(N))/N
-  }else{
-    t_t_n <- K_est^(3/2)*rho_hat_t*prop+K_est^(5/2)*sqrt(rho_hat_t*log(N))/N
-  }
-  eigen_decomp <- eigen(layer_dat)
-  eigen_values <- eigen_decomp$values
-  eigen_values_top <- sort(abs(eigen_values), decreasing = TRUE)
-  Kt_estimate <- which.max(eigen_values_top>t_t_n & c(eigen_values_top[-1],-Inf)<t_t_n)
-  return(Kt_estimate)
-}
-
-
 
 run_simulation <- function(N, K, L, Kl_target, Kl_source, rho_l_target, rho_l_source, permu_prop = 0){
   true_global_labels <- gen_true_labels(K, N) 
@@ -228,18 +185,14 @@ run_simulation <- function(N, K, L, Kl_target, Kl_source, rho_l_target, rho_l_so
     D <- diag(degrees) 
     S0 <- S0 + (A_squared - D)
   }
-  K_estimated <- shared_community_num_estimate(A_list, S0, N, L, permu_prop)
   global_clustering <- spectral_clustering(S0, K, true_global_labels)
   pred_global_labels <- global_clustering$predicted_labels
   global_ari <- global_clustering$ari
-  Kl_target_estimated <- target_community_num_estimate(A_list, pred_global_labels, K_estimated, permu_prop)
   target_ari <- local_cluster(A_list, pred_global_labels, true_target_labels, K, Kl_target)$ari
   list(K = K, L = L, Kl_target = Kl_target, rho_l_target = rho_l_target, permu_prop = permu_prop, 
     target_only_ari = target_only_ari, 
     global_sbm_ari = global_ari,
     target_sbm_ari = target_ari, 
-    K_estimated = K_estimated, 
-    Kl_target_estimated = Kl_target_estimated, 
     kappa_max = kappa_max)
 }
 
