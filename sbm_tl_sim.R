@@ -1,5 +1,5 @@
 rm(list = ls())
-source("/scratch/jz6169/MTLSBM/TransferLearning/sbm_tl_func.R")
+source("sbm_tl_func.R")
 
 task_id <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))
 set.seed(task_id)
@@ -44,12 +44,6 @@ for (i in seq_along(Kl_target_arr)) {
 }
 results_communities <- data.table::rbindlist(results_communities)
 
-output_dir <- "/scratch/jz6169/MTLSBM/TransferLearning/Simulation/"
-
-saveRDS(list(sparsity = results_sparsity, layers = results_layers, communities = results_communities),
-        file = file.path(output_dir, paste0("result_rep_", task_id, ".rds")))
-
-
 ###Vary permutation proportion
 K <- 8; L <- 200; Kl_target <- 4; Kl_source <- sample(2:Kl_target, L, replace = T); rho_l_source <- rep(0.01,L); rho_l_target <- 0.05
 permutation_prop <- c(0, 0.02, 0.04, 0.06, 0.08, 0.1, 0.12, 0.14, 0.16, 0.18, 0.2)
@@ -61,10 +55,6 @@ for (i in seq_along(permutation_prop)) {
   results_permute[[i]]$rep <- task_id
 }
 results_permute <- data.table::rbindlist(results_permute)
-saveRDS(list(permutation = results_permute),
-        file = file.path(output_dir, paste0("result_permu_rep_", task_id, ".rds")))
-
-
 
 
 
